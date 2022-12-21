@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 #include <stdlib.h>
 
 int rows=6;
@@ -6,12 +8,39 @@ int col=7;
 char a[6][7];
 int piece;
 
+typedef struct{
+    int hours;
+    int minutes;
+    int seconds;
+    } digital_clock;
 
 void printUI(int errors){
-    int i,j,k=0; /// i~rows , j~columns , k~menu position
+    int i,j; /// i~rows , j~columns , k~menu position
     int triScreen = rows/3; /// to print the menu in the 1st third of the board
-    int farRight = (4*col)+1; /// to print the menu on the right
+    int farRight; /// to print the menu on the right
     char character1;
+    digital_clock clock1;
+    clock1.hours = 0;
+    clock1.minutes = 0;
+    clock1.seconds = 0;
+
+    while(1) {
+    int k=0;
+    farRight = (4*col)+1;
+    system("cls");
+       if(clock1.seconds == 60){
+           clock1.minutes += 1;
+           clock1.seconds = 0;
+       }
+       if(clock1.minutes == 60){
+           clock1.hours += 1;
+           clock1.minutes = 0;
+       }
+       if(clock1.hours == 24){
+           clock1.hours = 0;
+           clock1.minutes = 0;
+           clock1.seconds = 0;
+       }
 
     printf("\n\n+");
     for(j=0;j<col;j++){
@@ -34,7 +63,7 @@ void printUI(int errors){
                 printf(" ");
             }
             else if(k==triScreen+2){
-                printf("5 moves         00:00:00");
+                printf("5 moves         %02d:%02d:%02d",clock1.hours,clock1.minutes,clock1.seconds);
             }
             else if(k==triScreen+3){
                 printf(" ");
@@ -94,30 +123,33 @@ void printUI(int errors){
 
     switch(errors){
         case 1:
-            printf("\nERROR! Enter from (1 to %d)\n",col);
+            printf("\nERROR! Enter from (1 to %d)",col);
             break;
         case 2:
-            printf("\nColumn is filled, choose another column\n");
+            printf("\nColumn is filled, choose another column");
             break;
+    }
+    clock1.seconds++;
+    sleep(1);
     }
 }
 
 int fillBoard(){
 
     int i,j,check=0,errors=0;
-    char character[1000];
+    int character;
     while(check==0){
 
-        fgets(character,1000,stdin);
-        j = atoi(character);
-
-        while(j<1||j>col||j==0){
+        scanf("%d",&character);
+        while(character<1||character>col){
             system("cls");
             errors = 1;
             printUI(errors);
-            fgets(character,1000,stdin);
-            j = atoi(character);
+            scanf("%d",&character);
         }
+
+        j = character; /// Type casting
+
             for(i=rows;i>=0;i--){
                 if(a[i][j-1] == ' '){
                     a[i][j-1] = piece;
@@ -131,6 +163,7 @@ int fillBoard(){
             printUI(errors);
         }
     }
+
     return 0;
 }
 
@@ -160,4 +193,3 @@ int main(){
     }
     return 0;
 }
-
