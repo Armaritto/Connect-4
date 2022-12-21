@@ -81,6 +81,7 @@ void printUI(int errors){
             }
         }
         k++;
+        
     }
     printf("\n  ");
 
