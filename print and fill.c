@@ -1,10 +1,102 @@
 #include <stdio.h>
 #include <stdlib.h>
+#define X 'X'
+#define O 'O'
 
-int rows=6;
-int col=7;
-char a[6][7];
+int rows=20;
+int col=20;
+char a[20][20];
 int piece;
+
+typedef struct{
+    int score_x;
+    int score_o;
+}scores;
+
+scores count_4_Row(int m, int n, char arr[m][n]){
+
+   scores score;
+
+   int score_R = 0, score_Y = 0;
+   char temp;
+   //////////////////////////////////////////////////////////////////////
+   void check_right(int row, int col)
+{
+     int count_R = 0; int count_Y = 0;
+            for(int i = 0; i < 4; i++)
+                if(col + i < n)
+            {
+            temp = arr[row][col + i] ;
+            if (temp == X) {count_R++; count_Y = 0;}
+            else if(temp == O){count_Y++; count_R = 0;}
+            else {count_Y = count_R = 0; break;};
+            if (count_R == 4) {score_R++;}; if (count_Y == 4) {score_Y++;};
+            }
+}
+
+   //////////////////////////////////////////////////////////////////////
+   void check_down(int row, int col)
+{
+     int count_R = 0; int count_Y = 0;
+            for(int i = 0; i < 4; i++)
+                if(row + i < m)
+            {
+            temp = arr[row + i][col] ;
+            if (temp == X) {count_R++; count_Y = 0;}
+            else if(temp == O){count_Y++; count_R = 0;}
+            else {count_Y = count_R = 0; break;};
+            if (count_R == 4) {score_R++;}; if (count_Y == 4) {score_Y++;};
+            }
+}
+
+   ///////////////////////////////////////////////////////////////////////
+   void check_diagonal_right(int row, int col)
+{
+     int count_R = 0; int count_Y = 0;
+            for(int i = 0; i < 4; i++)
+                if(row + i < m && col + i < n)
+            {
+            temp = arr[row + i][col + i] ;
+            if (temp == X) {count_R++; count_Y = 0;}
+            else if(temp == O){count_Y++; count_R = 0;}
+            else {count_Y = count_R = 0; break;};
+            if (count_R == 4) {score_R++;}; if (count_Y == 4) {score_Y++;};
+            }
+}
+
+   ///////////////////////////////////////////////////////////////////////
+    void check_diagonal_left(int row, int col)
+{
+     int count_R = 0; int count_Y = 0;
+            for(int i = 0; i < 4; i++)
+                if(row + i < m && col - i >= 0)
+            {
+            temp = arr[row + i][col - i] ;
+            if (temp == X) {count_R++; count_Y = 0;}
+            else if(temp == O){count_Y++; count_R = 0;}
+            else {count_Y = count_R = 0; break;};
+            if (count_R == 4) {score_R++;}; if (count_Y == 4) {score_Y++;};
+            }
+}
+
+   ///////////////////////////////////////////////////////////////////////
+
+    for (int row = 0; row < m; row++){
+        for (int col = 0; col < n; col++)
+        {
+
+        check_right(row, col);
+        check_down(row, col);
+        check_diagonal_right(row, col);
+        check_diagonal_left(row, col);
+
+        }
+    }
+    score.score_x = score_R;
+    score.score_o = score_Y;
+    return score;
+}
+
 
 
 void printUI(int errors){
@@ -12,6 +104,8 @@ void printUI(int errors){
     int triScreen = rows/3; /// to print the menu in the 1st third of the board
     int farRight = (4*col)+1; /// to print the menu on the right
     char character1;
+
+    scores playerscore = count_4_Row(rows, col, a);
 
     printf("\n\n+");
     for(j=0;j<col;j++){
@@ -43,10 +137,10 @@ void printUI(int errors){
                 printf("   Scores");
             }
             else if(k==triScreen+5){
-                printf("Player1 : 40");
+                printf("Player1 : %d",playerscore.score_x);
             }
             else{
-                printf("Player2 : 15");
+                printf("Player2 : %d",playerscore.score_o);
             }
         }
         k++;
@@ -81,7 +175,6 @@ void printUI(int errors){
             }
         }
         k++;
-        
     }
     printf("\n  ");
 
@@ -136,7 +229,6 @@ int fillBoard(){
 }
 
 int main(){
-
     int errors=0;
     for(int c=0;c<rows;c++){
         for(int b=0;b<col;b++){
@@ -146,14 +238,14 @@ int main(){
     printUI(errors);
     int endGame = rows*col;
     for(int c=0;c<endGame;c++){
-        if(c%2==0){ /// not complete
-            piece = 'X';
+        if(c%2==0){
+            piece = X;
             fillBoard();
             system("cls");
             printUI(errors);
         }
-        else{ /// not complete
-            piece = 'O';
+        else{
+            piece = O;
             fillBoard();
             system("cls");
             printUI(errors);
