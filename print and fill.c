@@ -9,10 +9,11 @@
 
 int rows=6;
 int col=7;
+int size =7;
 char a[6][7];
 int piece;
 int c=0;
-
+int onePlayerCheck;
 int progress[42];
 int shift = 0;
 
@@ -29,8 +30,7 @@ void update_piece(){
 void Undo(){
    int errors=0;
    int last_move_shown = progress[c-1];
-   for (int i = 0; i < rows; i++)
-   {
+   for (int i = 0; i < rows; i++){
     if (a[i][last_move_shown] != ' ')
     {
     a[i][last_move_shown] = ' ';
@@ -426,16 +426,20 @@ void printUI(int errors){
     }
 }
 
-int fillBoard(){  ///progress[] is used
+int fillBoard(){
 
     int i,j,check=0,errors=0;
     char character[1000];
     while(check==0){
     int saveCheck=0;
 
-        fgets(character,1000,stdin);
-        j = atoi(character);
-
+        if(onePlayerCheck==1 && c%2==1){
+            j = AI();
+        }
+        else{
+            fgets(character,1000,stdin);
+            j = atoi(character);
+        }
         while(j<1||j>col||j==0){
             if(character[0] == 'u'||character[0] == 'U'){
                 Undo();
@@ -475,22 +479,30 @@ int fillBoard(){  ///progress[] is used
                 if(a[i][j-1] == ' '){
                     a[i][j-1] = piece;
                     check=1;
-                    progress[c] = j-1; ///progress[] is used here
+                    progress[c] = j-1;
                     shift = 0;
                     c++;
                     break;
                 }
             }
         if(check==0){
-            system("cls");
-            errors = 2;
-            printUI(errors);
+            //if(onePlayerCheck!=1||c%2==0){
+                system("cls");
+                errors = 2;
+                printUI(errors);
+            //}
         }
     }
     return 0;
 }
 
 int start_new_game(){
+    char ppp;
+    printf("1. Vs Computer\n2. Vs Human");
+    //fgets(ppp,1000,stdin);
+    //onePlayerCheck = atoi(ppp);
+    scanf("%d",&onePlayerCheck);
+    system("cls");
     int errors=0;
     for(int c=0;c<rows;c++){
         for(int b=0;b<col;b++){
@@ -634,6 +646,28 @@ int load_game(){
     return 0;
 }
 
+
+int AI(){
+    time_t t;
+    srand((unsigned) time(&t));
+
+    int available[size];
+    for(int i=0;i<size;i++){
+        available[i]=i+1;
+    }
+
+    for(int j=0;j<size;j++){
+        if(a[0][available[j]-1]!= ' '){
+            available[j] = available[size-1];
+            size--;
+        }
+    }
+
+    int rv = (rand() % size);
+
+    return available[rv];
+}
 int main(void){
     mainMenu();
 }
+
