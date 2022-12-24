@@ -6,11 +6,75 @@
 #define X 'X'
 #define O 'O'
 
+
 int rows=6;
 int col=7;
 char a[6][7];
 int piece;
 int c=0;
+
+int progress[42];
+int shift = 0;
+
+void printUI(int errors);
+
+void update_piece(){
+   if(c%2==0)
+   {
+       piece = X;
+   }
+   else {piece = O;}
+}
+
+void Undo(){
+   int errors=0;
+   int last_move_shown = progress[c-1];
+   for (int i = 0; i < rows; i++)
+   {
+    if (a[i][last_move_shown] != ' ')
+    {
+    a[i][last_move_shown] = ' ';
+     c--;
+    shift++;
+    break;
+    }
+   }
+    update_piece();
+    system("cls");
+    printUI(errors);
+
+}
+
+void Redo(){
+    int errors=0;
+    int j;
+    if (shift != 0)
+    {j = progress[c];
+    for(int i=rows;i>=0;i--)
+    {
+      if(a[i][j] == ' ')
+        {
+            if(c%2 == 0)
+            {
+              a[i][j] = X;
+            }
+            else
+            {
+              a[i][j] = O;
+            }
+        break;
+        }
+    }
+    c++;
+    shift--;
+}
+update_piece();
+system("cls");
+printUI(errors);
+
+}
+
+
 
 ///colors functions
 void red(){
@@ -362,7 +426,7 @@ void printUI(int errors){
     }
 }
 
-int fillBoard(){
+int fillBoard(){  ///progress[] is used
 
     int i,j,check=0,errors=0;
     char character[1000];
@@ -373,17 +437,21 @@ int fillBoard(){
         j = atoi(character);
 
         while(j<1||j>col||j==0){
-           /* if(character == 'u'||character == 'U'){
+            if(character[0] == 'u'||character[0] == 'U'){
                 Undo();
+                fgets(character,1000,stdin);
+                j = atoi(character);
             }
-            else if(character == 'r'||character == 'R'){
+            else if(character[0] == 'r'||character[0] == 'R'){
                 Redo();
+                fgets(character,1000,stdin);
+                j = atoi(character);
             }
-            else if(character == 's'||character == 'S'){
+            /*else if(character == 's'||character == 'S'){
                 saveCheck = 1;
                 Save();
-            }
-            else*/ if(character[0] == 'q'||character[0] == 'Q'){
+            }*/
+            else if(character[0] == 'q'||character[0] == 'Q'){
                 if(saveCheck==0){
                     system("cls");
                     printf("Unsaved game\nDo you want to save\n1.Save\n2.Don't Save\n");
@@ -407,6 +475,8 @@ int fillBoard(){
                 if(a[i][j-1] == ' '){
                     a[i][j-1] = piece;
                     check=1;
+                    progress[c] = j-1; ///progress[] is used here
+                    shift = 0;
                     c++;
                     break;
                 }
@@ -564,7 +634,6 @@ int load_game(){
     return 0;
 }
 
-int main(){
+int main(void){
     mainMenu();
-    return 0;
 }
