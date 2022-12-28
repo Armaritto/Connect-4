@@ -1,4 +1,6 @@
-// TODO LIST: load game modification - Struct players use - save - Read Parameters xml - Top players - save
+// TODO LIST: load game modification - Struct players use - save - Top players - save
+// xml done
+// Note that game has bugs in 5*5 grid
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -9,9 +11,11 @@
 #define O 'O'
 
 /// Global Variables
-int rows=6;
-int col=7;
+int rows;
+int col;
+int topScore;
 int c=0;
+
 int onePlayerCheck;
 int shift = 0;
 struct{
@@ -34,11 +38,18 @@ typedef struct{
     char color;
 }info;
 
+typedef struct{
+    int height;
+    int width;
+    int highscores;
+    int corrupted;
+}parameters;
 
 /// Prototypes
+parameters parametersInXml();
 void printUI(int errors,char a[rows][col],info player1,info player2);
-int start_new_game(char a[rows][col]);
-int load_game(char a[rows][col]);
+int start_new_game();
+int load_game();
 int top_players(char a[rows][col]);
 int AI(char a[rows][col]);
 
@@ -59,7 +70,7 @@ void reset(){
 void openingGame(){
     system("cls");
     printf("\n\n\n\n");
-    int center=6*col;
+    int center=42;
     for(int x=0; x<center; x++){
         printf(" ");
     }
@@ -96,7 +107,7 @@ void openingGame(){
 void Loading(){
     system("cls");
     printf("\n\n\n\n");
-    int center=6*col;
+    int center=42;
     for(int x=0; x<center; x++){
         printf(" ");
     }
@@ -127,7 +138,7 @@ void Loading(){
 int Quit(){
     system("cls");
     printf("\n\n\n\n");
-    int center=6*col;
+    int center=42;
     for(int x=0; x<center; x++){
         printf(" ");
     }
@@ -229,8 +240,8 @@ void Redo(char a[rows][col],char piece,int progress[rows*col],info player1,info 
 
 }
 
-void mainMenu(char a[rows][col]){
-    int center=6*col;
+void mainMenu(){
+    int center=42;
     char the_menu[1000];
     for(int x=0; x<center; x++)
     {
@@ -300,10 +311,10 @@ void mainMenu(char a[rows][col]){
 
     fgets(the_menu,1000,stdin);
     int j = atoi(the_menu);
-    while(j<1||j>col||j==0)
+    while(j<1||j>4||j==0)
     {
         system("cls");
-        mainMenu(a);
+        mainMenu();
     }
     switch(j)
     {
@@ -311,13 +322,13 @@ void mainMenu(char a[rows][col]){
         system("cls");
         Loading();
         system("cls");
-        start_new_game(a);
+        start_new_game();
         break;
     case 2:
         system("cls");
         Loading();
         system("cls");
-        load_game(a);
+        load_game();
         break;
     /*case 3:
         system("cls");
@@ -334,7 +345,7 @@ void mainMenu(char a[rows][col]){
 }
 
 void startNewGameMenu(){
-    int center=6*col;
+    int center=42;
     for(int x=0; x<center; x++)
     {
         printf(" ");
@@ -391,6 +402,76 @@ void startNewGameMenu(){
     yellow();
     printf("=================================\n");
     reset();
+}
+
+int corruptedMenu(){
+    system("cls");
+    int center = 42;
+    printf("\n\n\n\n\a");
+    for(int x=0; x<center-5; x++)
+    {
+        printf(" ");
+    }
+    red();
+    printf("Parameters File is corrupted please check the file\n");
+    for(int x=0; x<center; x++)
+    {
+        printf(" ");
+    }
+    yellow();
+    printf("1.To skip and go with default parameters\n");
+    for(int x=0; x<center; x++)
+    {
+        printf(" ");
+    }
+    printf("             2.To Try again\n");
+    reset();
+    int checkers;
+    char checker[256];
+    fgets(checker,256,stdin);
+    checkers = atoi(checker);
+    if(checkers == 1){
+        system("cls");
+        return -1;
+    }
+    else{
+        start_new_game();
+    }
+}
+
+int error404(){
+    system("cls");
+    int center = 42;
+    printf("\n\n\n\n\a");
+    for(int x=0; x<center-18; x++)
+    {
+        printf(" ");
+    }
+    red();
+    printf("404 File Not Found please put the parameters file in same folder with the game!\n");
+    for(int x=0; x<center; x++)
+    {
+        printf(" ");
+    }
+    yellow();
+    printf("1.To skip and go with default parameters\n");
+    for(int x=0; x<center; x++)
+    {
+        printf(" ");
+    }
+    printf("             2.To Try again\n");
+    reset();
+    int checkers;
+    char checker[256];
+    fgets(checker,256,stdin);
+    checkers = atoi(checker);
+    if(checkers == 1){
+        system("cls");
+        return -1;
+    }
+    else{
+        start_new_game();
+    }
 }
 
 scores count_4_Row(int m, int n, char arr[m][n]){
@@ -553,7 +634,7 @@ scores count_4_Row(int m, int n, char arr[m][n]){
 
 void printUI(int errors,char a[rows][col],info player1,info player2){
     int endGame = rows*col;
-    int center = 6*col;
+    int center = 42;
     int i,j,k=0; /// i~rows , j~columns , k~menu position
     int triScreen = rows/3; /// to print the menu in the 1st third of the board
     int farRight = (4*col)+1; /// to print the menu on the right
@@ -855,27 +936,45 @@ int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,i
     return 0;
 }
 
-int start_new_game(char a[rows][col]){
+int start_new_game(){
+    parameters gameparameters;
     info player1;
     info player2;
+    int defaultValueReference;
+    char gameFileParametersName[] = "Game Parameters.xml";
+    gameparameters = parametersInXml(gameFileParametersName);
+    if(gameparameters.corrupted==1){
+        defaultValueReference = corruptedMenu();
+    }
+    else if(gameparameters.corrupted==2){
+        defaultValueReference = error404();
+    }
+    if(defaultValueReference == -1){
+        char defaultFileParametersName[] = "Default Parameters.xml";
+        gameparameters = parametersInXml(defaultFileParametersName);
+    }
+        rows = gameparameters.height;
+        col = gameparameters.width;
+        topScore = gameparameters.highscores;
+
+    char a[rows][col];
     int progress[rows*col];
     int errors=0;
     char piece;
     char ppp[1000];
-
     startNewGameMenu();
     fgets(ppp,1000,stdin);
     int read = atoi(ppp);
     if(read == 3){ ///back
         system("cls");
-        mainMenu(a);
+        mainMenu();
     }
     onePlayerCheck = read;
     system("cls");
     if(onePlayerCheck==2){
 
         printf("\n\n\n\n");
-        int center=6*col;
+        int center=42;
         for(int x=0; x<center; x++){
             printf(" ");
         }
@@ -895,7 +994,7 @@ int start_new_game(char a[rows][col]){
     else{
 
         printf("\n\n\n\n");
-        int center=6*col;
+        int center=42;
         for(int x=0; x<center; x++){
             printf(" ");
         }
@@ -963,16 +1062,20 @@ int start_new_game(char a[rows][col]){
     printf("Press Enter to return to main menu");
     getchar();
     system("cls");
-    mainMenu(a);
+    mainMenu();
     return 0;
 }
 
-int load_game(char a[rows][col]){ ///did not add struct
+int load_game(){ ///did not add struct
     info player1;
     info player2;
+    rows = 7;
+    col = 9;
+    topScore = 10;
+    char a[rows][col];
     int progress[rows*col];
     char piece;
-    int center=6*col;
+    int center=42;
     int errors=0;
     int currentGame;
     system("cls");
@@ -1110,7 +1213,7 @@ int load_game(char a[rows][col]){ ///did not add struct
     printf("Press Enter to return to main menu");
     getchar();
     system("cls");
-    mainMenu(a);
+    mainMenu();
     return 0;
 }
 
@@ -1144,12 +1247,220 @@ int AI(char a[rows][col]){
     return available[rv];
 }
 
+parameters parametersInXml(char filename[256]){
+    parameters parameters1;
+
+    FILE *file = fopen(filename,"r");
+    int i;
+    int j;
+    int count=0;
+    int corruptionChecker=0; ///zero:normal - one:file is corrupted - two:file not found
+    int topScore;
+    if (file != NULL){
+        while(count <=4){
+            if(count==0){ ///Configuration Opening Corruption Check
+                i=0;
+                j=0;
+                char ConfigOpen[256];
+                fgets(ConfigOpen,sizeof(ConfigOpen),file);
+                while((ConfigOpen[i]==' ')||(ConfigOpen[i]=='\t')){
+                    i++;
+                }
+                char ConfigOpenCode[256-i];
+                char ConfigOpenTag[] = "<Configurations>";
+                while(ConfigOpen[j]!='\0'){
+                    ConfigOpenCode[j]=ConfigOpen[i+j];
+                    j++;
+                }
+                j++;
+                for(j=0;j<strlen(ConfigOpenTag);j++){
+                    if(ConfigOpenCode[j] != ConfigOpenTag[j]){
+                        corruptionChecker=1;
+                        break;
+                    }
+                }
+                count++;
+            }
+            else if(count==1){ /// height parameter take and Corruption Check
+                i=0;
+                j=0;
+                char heightLine[256];
+                fgets(heightLine,sizeof(heightLine),file);
+                while((heightLine[i]==' ')||(heightLine[i]=='\t')){
+                    i++;
+                }
+                char heightCode[256-i];
+                while(heightLine[j]!='\0'){
+                    heightCode[j]=heightLine[i+j];
+                    j++;
+                }
+                j++;
+                char height[256];
+                char heightOpenTag[] = "<Height>";
+                char heightCloseTag[] = "</Height>";
+
+                for(j=0;j<strlen(heightOpenTag);j++){
+                    if(heightCode[j] != heightOpenTag[j]){
+                        corruptionChecker=1;
+                        break;
+                    }
+                }
+                if(!corruptionChecker){
+                    int a=0;
+                    while(isdigit(heightCode[j])){
+                        height[a] = heightCode[j];
+                        a++;
+                        j++;
+                    }
+                    parameters1.height = atoi(height);
+                    for(i=0;i<strlen(heightOpenTag);i++){
+                        if(heightCode[i+j] != heightCloseTag[i]){
+                            corruptionChecker=1;
+                            break;
+                        }
+                    }
+                }
+                count++;
+            }
+            else if(count==2){ /// width parameter take and Corruption Check
+                i=0;
+                j=0;
+                char widthLine[256];
+                fgets(widthLine,sizeof(widthLine),file);
+                while((widthLine[i]==' ')||(widthLine[i]=='\t')){
+                    i++;
+                }
+                char widthCode[256-i];
+                while(widthLine[j]!='\0'){
+                    widthCode[j]=widthLine[i+j];
+                    j++;
+                }
+                j++;
+                char width[256];
+                char widthOpenTag[] = "<Width>";
+                char widthCloseTag[] = "</Width>";
+
+                for(j=0;j<strlen(widthOpenTag);j++){
+                    if(widthCode[j] != widthOpenTag[j]){
+                        corruptionChecker=1;
+                        break;
+                    }
+                }
+                if(!corruptionChecker){
+                    int a=0;
+                    while(isdigit(widthCode[j])){
+                        width[a] = widthCode[j];
+                        a++;
+                        j++;
+                    }
+                    parameters1.width = atoi(width);
+                    for(i=0;i<strlen(widthOpenTag);i++){
+                        if(widthCode[i+j] != widthCloseTag[i]){
+                            corruptionChecker=1;
+                            break;
+                        }
+                    }
+                }
+                count++;
+            }
+            else if(count==3){ /// HighScores parameter take and Corruption Check
+                i=0;
+                j=0;
+                char highscoreLine[256];
+                fgets(highscoreLine,sizeof(highscoreLine),file);
+                while((highscoreLine[i]==' ')||(highscoreLine[i]=='\t')){
+                    i++;
+                }
+                char highscoreCode[256-i];
+                while(highscoreLine[j]!='\0'){
+                    highscoreCode[j]=highscoreLine[i+j];
+                    j++;
+                }
+                j++;
+                char highscore[256];
+                char highscoreOpenTag[] = "<Highscores>";
+                char highscoreCloseTag[] = "</Highscores>";
+
+                for(j=0;j<strlen(highscoreOpenTag);j++){
+                    if(highscoreCode[j] != highscoreOpenTag[j]){
+                        corruptionChecker=1;
+                        break;
+                    }
+                }
+                if(!corruptionChecker){
+                    int a=0;
+                    while(isdigit(highscoreCode[j])){
+                        highscore[a] = highscoreCode[j];
+                        a++;
+                        j++;
+                    }
+                    parameters1.highscores = atoi(highscore);
+                    for(i=0;i<strlen(highscoreOpenTag);i++){
+                        if(highscoreCode[i+j] != highscoreCloseTag[i]){
+                            corruptionChecker=1;
+                            break;
+                        }
+                    }
+                }
+                count++;
+            }
+            else if(count==4){ ///Configuration Closing Corruption Check
+                i=0;
+                j=0;
+                char ConfigClose[256];
+                fgets(ConfigClose,sizeof(ConfigClose),file);
+                while((ConfigClose[i]==' ')||(ConfigClose[i]=='\t')){
+                    i++;
+                }
+                char ConfigCloseCode[256-i];
+                char ConfigCloseTag[] = "</Configurations>";
+                while(ConfigClose[j]!='\0'){
+                    ConfigCloseCode[j]=ConfigClose[i+j];
+                    j++;
+                }
+                j++;
+                for(j=0;j<strlen(ConfigCloseTag);j++){
+                    if(ConfigCloseCode[j] != ConfigCloseTag[j]){
+                        corruptionChecker=1;
+                        break;
+                    }
+                }
+                count++;
+            }
+            if(corruptionChecker==1){
+                break;
+            }
+        }
+    }
+    else{
+        corruptionChecker=2;
+    }
+    fclose(file);
+
+    if(corruptionChecker==0){
+        parameters1.corrupted=0;
+    }
+    else if(corruptionChecker==1){
+        parameters1.corrupted=1;
+        parameters1.height=0;
+        parameters1.highscores=0;
+        parameters1.width=0;
+    }
+    else if(corruptionChecker==2){
+        parameters1.corrupted=2;
+        parameters1.height=0;
+        parameters1.highscores=0;
+        parameters1.width=0;
+    }
+
+    return parameters1;
+}
+
 
 /// main
 int main(void){
-    char a[rows][col];
     openingGame();
     system("cls");
-    mainMenu(a);
+    mainMenu();
 }
 
