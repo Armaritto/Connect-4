@@ -1,4 +1,4 @@
-// TODO LIST: all menus design - load game modification - save - Read Parameters xml - Top players
+// TODO LIST: load game modification - Struct players use - save - Read Parameters xml - Top players - save
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -647,7 +647,7 @@ void printUI(int errors,char a[rows][col],info player1,info player2){
             }
             else if(k==triScreen+2)
             {
-                printf("%02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
+                printf("Time: %02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
             }
             else if(k==triScreen+3)
             {
@@ -715,7 +715,7 @@ void printUI(int errors,char a[rows][col],info player1,info player2){
             }
             else if(k==triScreen+2)
             {
-                printf("%02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
+                printf("Time: %02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
             }
             else if(k==triScreen+3)
             {
@@ -924,9 +924,10 @@ int start_new_game(char a[rows][col]){
             piece = X;
             fillBoard(a,piece,progress,player1,player2);
             system("cls");
-            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec)%60;
+            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
             structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
             structTime.moveTimeHr = (structTime.moveTimeMin/60);
+            structTime.moveTimeSec %= 60;
             printUI(errors,a,player1,player2);
         }
         else
@@ -934,9 +935,10 @@ int start_new_game(char a[rows][col]){
             piece = O;
             fillBoard(a,piece,progress,player1,player2);
             system("cls");
-            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec)%60;
+            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
             structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
             structTime.moveTimeHr = (structTime.moveTimeMin/60);
+            structTime.moveTimeSec %= 60;
             printUI(errors,a,player1,player2);
         }
     }
@@ -970,11 +972,32 @@ int load_game(char a[rows][col]){ ///did not add struct
     info player2;
     int progress[rows*col];
     char piece;
+    int center=6*col;
     int errors=0;
     int currentGame;
     system("cls");
-    printf("Choose a game(1-3)\n");
+    printf("\n\n\n\n");
+    yellow();
+    for(int x=0; x<center; x++){
+            printf(" ");
+    }
+    printf("=================================\n");
+    for(int x=0; x<center-1; x++)
+    {
+        printf(" ");
+    }
+    printf("|");
+    red();
+    printf("     Choose a game from (1-3)    ");
+    yellow();
+    printf("|\n");
+    for(int x=0; x<center; x++){
+            printf(" ");
+    }
+    yellow();
+    printf("=================================\n");
     scanf("%d",&currentGame);
+    Loading();
     if(currentGame==2)
     {
         c=29; ///read c and array
@@ -1039,6 +1062,7 @@ int load_game(char a[rows][col]){ ///did not add struct
 
     printUI(errors,a,player1,player2);
     ///c = moves;
+    structTime.startTimeSec = time(NULL);
     int endGame=rows*col;
     while(c<endGame)
     {
@@ -1046,6 +1070,10 @@ int load_game(char a[rows][col]){ ///did not add struct
         {
             piece = X;
             fillBoard(a,piece,progress,player1,player2);
+            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
+            structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
+            structTime.moveTimeHr = (structTime.moveTimeMin/60);
+            structTime.moveTimeSec %= 60;
             system("cls");
             printUI(errors,a,player1,player2);
         }
@@ -1053,6 +1081,10 @@ int load_game(char a[rows][col]){ ///did not add struct
         {
             piece = O;
             fillBoard(a,piece,progress,player1,player2);
+            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
+            structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
+            structTime.moveTimeHr = (structTime.moveTimeMin/60);
+            structTime.moveTimeSec %= 60;
             system("cls");
             printUI(errors,a,player1,player2);
         }
