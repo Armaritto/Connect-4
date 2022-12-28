@@ -1,7 +1,9 @@
 # Connect-4
 Project_Programming-1
 
- TODO LIST: all menus design - load game modification - save - Read Parameters xml - Top players
+TODO LIST: load game modification - Struct players use - save - Top players - save
+XML done
+Note that game has bugs in 5*5 grid
 
 استرها معانا يارب
 
