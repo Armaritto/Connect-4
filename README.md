@@ -1,5 +1,7 @@
 # Connect-4
 Project_Programming-1
 
-استارها معانا يارب
+ TODO LIST: all menus design - load game modification - save - Read Parameters xml - Top players
+
+استرها معانا يارب
 
