@@ -925,6 +925,14 @@ int start_new_game()
             yellow();
             printf("Enter file's path\n");
             gets(gameFileParametersName2);
+
+            for(int i=0;i<strlen(gameFileParametersName2);i++){
+                if(gameFileParametersName2[i]=='\\'){
+                    gameFileParametersName2[i] = '/';
+                }
+            }
+
+
             strcpy(gameFileParametersName,gameFileParametersName2);
         }
         gameparameters = parametersInXml(gameFileParametersName);
