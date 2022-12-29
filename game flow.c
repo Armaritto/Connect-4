@@ -1,4 +1,4 @@
-// TODO LIST: Load game modification - save - Top players - printUI modification
+// TODO LIST: Load game modification - save - Top players
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -66,7 +66,8 @@ void reset()
     printf("\033[0m");
 }
 
-void gotoxy(int xAxis,int yAxis){
+void gotoxy(int xAxis,int yAxis)
+{
     COORD c;
     c.X = xAxis;
     c.Y = yAxis;
@@ -426,12 +427,12 @@ int corruptedMenu()
     system("cls");
     int center = 42;
     printf("\n\n\n\n\a");
-    for(int x=0; x<center-5; x++)
+    for(int x=0; x<center; x++)
     {
         printf(" ");
     }
     red();
-    printf("Parameters File is corrupted please check the file\n");
+    printf("      Parameters File is Corrupted!\n");
     for(int x=0; x<center; x++)
     {
         printf(" ");
@@ -442,7 +443,7 @@ int corruptedMenu()
     {
         printf(" ");
     }
-    printf("             2.To Try again\n");
+    printf("         2.To Enter file's path\n");
     reset();
     int checkers;
     char checker[256];
@@ -453,10 +454,10 @@ int corruptedMenu()
         system("cls");
         return -1;
     }
-    else
+    else if(checkers == 2)
     {
-        start_new_game();
-        return 0;
+        system("cls");
+        return -5;
     }
 }
 
@@ -465,12 +466,12 @@ int error404()
     system("cls");
     int center = 42;
     printf("\n\n\n\n\a");
-    for(int x=0; x<center-18; x++)
+    for(int x=0; x<center; x++)
     {
         printf(" ");
     }
     red();
-    printf("404 File Not Found please put the parameters file in same folder with the game!\n");
+    printf("        Error 404 File Not Found!\n");
     for(int x=0; x<center; x++)
     {
         printf(" ");
@@ -481,7 +482,7 @@ int error404()
     {
         printf(" ");
     }
-    printf("             2.To Try again\n");
+    printf("         2.To Enter file's path\n");
     reset();
     int checkers;
     char checker[256];
@@ -492,10 +493,10 @@ int error404()
         system("cls");
         return -1;
     }
-    else
+    else if(checkers == 2)
     {
-        start_new_game();
-        return 0;
+        system("cls");
+        return -5;
     }
 }
 
@@ -837,14 +838,24 @@ int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,i
             }
             /*else if(character == 's'||character == 'S'){
                 saveCheck = 1;
-                Save();
+                save();
             }*/
             else if(character[0] == 'q'||character[0] == 'Q')
             {
                 if(saveCheck==0)
                 {
+                    int center= ((col*4)+50)/2;
                     system("cls");
-                    printf("Unsaved game\nDo you want to save\n1.Save\n2.Don't Save\n");
+                    red();
+                    gotoxy(center,4);
+                    printf("   Unsaved game");
+                    gotoxy(center,5);
+                    printf("Do you want to save");
+                    yellow();
+                    gotoxy(center,7);
+                    printf("      1.Save");
+                    gotoxy(center,8);
+                    printf("   2.Don't Save");
                     int save_choice;
                     scanf("%d",&save_choice);
                     if(save_choice==1)
@@ -894,19 +905,33 @@ int start_new_game()
     int defaultValueReference;
     char gameFileParametersName[] = "Game Parameters.xml";
     gameparameters = parametersInXml(gameFileParametersName);
-    if(gameparameters.corrupted==1)
-    {
-        defaultValueReference = corruptedMenu();
+    while(gameparameters.corrupted==1 || gameparameters.corrupted==2){
+        if(gameparameters.corrupted==1)
+        {
+            defaultValueReference = corruptedMenu();
+        }
+        else if(gameparameters.corrupted==2)
+        {
+            defaultValueReference = error404();
+        }
+        if(defaultValueReference == -1)
+        {
+            char defaultFileParametersName[] = "Default Parameters.xml";
+            gameparameters = parametersInXml(defaultFileParametersName);
+        }
+        else if(defaultValueReference == -5){
+            char gameFileParametersName2[256];
+            system("cls");
+            yellow();
+            printf("Enter file's path\n");
+            gets(gameFileParametersName2);
+            strcpy(gameFileParametersName,gameFileParametersName2);
+        }
+        gameparameters = parametersInXml(gameFileParametersName);
+        system("cls");
     }
-    else if(gameparameters.corrupted==2)
-    {
-        defaultValueReference = error404();
-    }
-    if(defaultValueReference == -1)
-    {
-        char defaultFileParametersName[] = "Default Parameters.xml";
-        gameparameters = parametersInXml(defaultFileParametersName);
-    }
+
+
     rows = gameparameters.height;
     col = gameparameters.width;
 
@@ -1028,13 +1053,13 @@ int start_new_game()
     return 0;
 }
 
-int load_game()  ///did not add struct
+int load_game()
 {
     info player1;
     info player2;
     int onePlayerCheck;
-    rows = 7;
-    col = 9;
+    rows = 6;
+    col = 7;
     char a[rows][col];
     int progress[rows*col];
     char piece;
@@ -1127,9 +1152,7 @@ int load_game()  ///did not add struct
         }
     }
 
-
     printUI(errors,a,player1,player2);
-    ///c = moves;
     structTime.startTimeSec = time(NULL);
     int endGame=rows*col;
     while(c<endGame)
@@ -1159,16 +1182,17 @@ int load_game()  ///did not add struct
     }
 
     scores playerscore = count_4_Row(rows, col, a);
+    printf("\n");
     if(playerscore.score_x>playerscore.score_o)
     {
         red();
-        printf("Player 1 is winner\n\n");
+        printf("%s is winner\n\n",player1.name);
         reset();
     }
     else if(playerscore.score_x<playerscore.score_o)
     {
         yellow();
-        printf("Player 2 is winner\n\n");
+        printf("%s is winner\n\n",player2.name);
         reset();
     }
     else
@@ -1475,7 +1499,8 @@ parameters parametersInXml(char filename[256])
     return parameters1;
 }
 
-int top_players(){
+int top_players()
+{
     char gameFileParametersName[] = "Game Parameters.xml";
     int defaultValueReference;
     parameters gameparameters = parametersInXml(gameFileParametersName);
