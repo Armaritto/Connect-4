@@ -1220,7 +1220,7 @@ int load_game(){ ///did not add struct
 int AI(char a[rows][col]){
     time_t t;
     srand((unsigned) time(&t));
-    int size = 7;
+    int size = col;
     int available[size];
     for(int i=0; i<size; i++)
     {
