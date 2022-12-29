@@ -5,8 +5,6 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#define X 'X'
-#define O 'O'
 
 /// Global Variables
 int rows;
@@ -68,6 +66,15 @@ void reset()
     printf("\033[0m");
 }
 
+void gotoxy(int xAxis,int yAxis){
+    COORD c;
+    c.X = xAxis;
+    c.Y = yAxis;
+
+    SetConsoleCursorPosition(
+        GetStdHandle(STD_OUTPUT_HANDLE), c);
+}
+
 void openingGame()
 {
     system("cls");
@@ -125,11 +132,11 @@ void Loading()
     printf(" ");
     red();
     for(int i=0;i<3;i++){
-      //  Sleep(500);
+        Sleep(500);
         printf(".");
     }
     reset();
-   // Sleep(500);
+    Sleep(500);
 }
 
 int Quit()
@@ -171,11 +178,11 @@ char update_piece(char piece)
 {
     if(c%2==0)
     {
-        piece = X;
+        piece = 'X';
     }
     else
     {
-        piece = O;
+        piece = 'O';
     }
     return piece;
 }
@@ -225,11 +232,11 @@ void Redo(char a[rows][col],char piece,int progress[rows*col],info player1,info 
                 {
                     if(c%2 == 0)
                     {
-                        a[i][j] = X;
+                        a[i][j] = 'X';
                     }
                     else
                     {
-                        a[i][j] = O;
+                        a[i][j] = 'O';
                     }
                     break;
                 }
@@ -252,7 +259,9 @@ void mainMenu()
     {
         printf(" ");
     }
+    printf("\e[1;94m");
     printf("   Connect 4s\n\n\n");
+    reset();
     center-=7;
     for(int x=0; x<center-1; x++)
     {
@@ -356,7 +365,9 @@ void startNewGameMenu()
     {
         printf(" ");
     }
+    printf("\e[1;94m");
     printf("   Connect 4s\n\n\n");
+    reset();
     center-=7;
     for(int x=0; x<center-1; x++)
     {
@@ -445,6 +456,7 @@ int corruptedMenu()
     else
     {
         start_new_game();
+        return 0;
     }
 }
 
@@ -483,6 +495,7 @@ int error404()
     else
     {
         start_new_game();
+        return 0;
     }
 }
 
@@ -499,12 +512,12 @@ scores count_4_Row(int m, int n, char arr[m][n])
             if(col + i < n)
             {
                 temp = arr[row][col + i] ;
-                if (temp == X)
+                if (temp == 'X')
                 {
                     count_R++;
                     count_Y = 0;
                 }
-                else if(temp == O)
+                else if(temp == 'O')
                 {
                     count_Y++;
                     count_R = 0;
@@ -533,12 +546,12 @@ scores count_4_Row(int m, int n, char arr[m][n])
             if(row + i < m)
             {
                 temp = arr[row + i][col] ;
-                if (temp == X)
+                if (temp == 'X')
                 {
                     count_R++;
                     count_Y = 0;
                 }
-                else if(temp == O)
+                else if(temp == 'O')
                 {
                     count_Y++;
                     count_R = 0;
@@ -567,12 +580,12 @@ scores count_4_Row(int m, int n, char arr[m][n])
             if(row + i < m && col + i < n)
             {
                 temp = arr[row + i][col + i] ;
-                if (temp == X)
+                if (temp == 'X')
                 {
                     count_R++;
                     count_Y = 0;
                 }
-                else if(temp == O)
+                else if(temp == 'O')
                 {
                     count_Y++;
                     count_R = 0;
@@ -601,12 +614,12 @@ scores count_4_Row(int m, int n, char arr[m][n])
             if(row + i < m && col - i >= 0)
             {
                 temp = arr[row + i][col - i] ;
-                if (temp == X)
+                if (temp == 'X')
                 {
                     count_R++;
                     count_Y = 0;
                 }
-                else if(temp == O)
+                else if(temp == 'O')
                 {
                     count_Y++;
                     count_R = 0;
@@ -643,16 +656,53 @@ scores count_4_Row(int m, int n, char arr[m][n])
     return score;
 }
 
-void printUI(int errors,char a[rows][col],info player1,info player2)
-{
+void printBoard(char a[rows][col]){
+    char character;
+    printf("\n\n");
+    printf("\n+");
+    for(int j=0; j<col; j++)
+    {
+        printf("---+");
+    }
+    for(int i=0; i<rows; i++)
+    {
+        printf("\n|");
+        for(int j=0; j<col; j++)
+        {
+            character = a[i][j];
+            if(character== 'X')
+            {
+                red();
+                printf(" %c ",character);
+                reset();
+                printf("|");
+            }
+            else if(character== 'O')
+            {
+                yellow();
+                printf(" %c ",character);
+                reset();
+                printf("|");
+            }
+            else
+            {
+                printf(" %c ",character);
+                printf("|");
+            }
+        }
+        printf("\n+");
+        for(int j=0; j<col; j++)
+        {
+            printf("---+");
+        }
+    }
+}
+
+void printUI(int errors,char a[rows][col],info player1,info player2){
+
     int endGame = rows*col;
-    int center = 42;
-    int i,j,k=0; /// i~rows , j~columns , k~menu position
-    int triScreen = rows/3; /// to print the menu in the 1st third of the board
-    int farRight = (4*col)+1; /// to print the menu on the right
-    char character1;
-    player1.color=X;
-    player2.color=O;
+    player1.color='X';
+    player2.color='O';
     player1.nMoves=0;
     player2.nMoves=0;
 
@@ -671,184 +721,58 @@ void printUI(int errors,char a[rows][col],info player1,info player2)
     player1.score = playerscore.score_x;
     player2.score = playerscore.score_o;
 
-    for(int x=0; x<center; x++)
-    {
-        printf(" ");
-    }
-    printf("Connect 4s\n\n");
-    printf("\n+");
-    for(j=0; j<col; j++)
-    {
-        printf("---+");
-    }
-    for(i=0; i<rows; i++)
-    {
-        printf("\n|");
-        for(j=0; j<col; j++)
-        {
-            character1 = a[i][j];
-            if(character1== X)
-            {
-                red();
-                printf(" %c ",character1);
-                reset();
-                printf("|");
-            }
-            else if(character1== O)
-            {
-                yellow();
-                printf(" %c ",character1);
-                reset();
-                printf("|");
-            }
-            else
-            {
-                printf(" %c ",character1);
-                printf("|");
-            }
+    printBoard(a);
+    int space= (col*4)+20;
+    int center= ((col*4)+50)/2;
+    gotoxy(center,0);
+    printf("\e[1;94m");
+    printf("Connect 4s");
+    reset();
+    gotoxy(space,7);
 
-        }
-        if(k>=triScreen&&k<(triScreen+7))
-        {
-            for(int x=0; x<farRight; x++)
-            {
-                printf(" ");
-            }
-            if(k==triScreen)
-            {
-                if(c==endGame)
-                {
-                    printf("End Game!");
-                }
-                else
-                {
-                    if(c%2==0)
-                    {
-                        red();
-                        printf("%s's Turn",player1.name);
-                        reset();
-                    }
-                    else
-                    {
-                        yellow();
-                        printf("%s's Turn",player2.name);
-                        reset();
-                    }
-                }
-
-            }
-            else if(k==triScreen+1)
-            {
-                printf(" ");
-            }
-            else if(k==triScreen+2)
-            {
-                printf("Time: %02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
-            }
-            else if(k==triScreen+3)
-            {
-                printf(" ");
-            }
-            else if(k==triScreen+4)
-            {
-                printf("   Scores            %d Total moves",c);
-            }
-            else if(k==triScreen+5)
-            {
-                red();
-                printf("%-17s",player1.name);
-                printf(":%d     %d moves",player1.score,player1.nMoves);
-                reset();
-            }
-            else
-            {
-                yellow();
-                printf("%-17s",player2.name);
-                printf(":%d     %d moves",player2.score,player2.nMoves);
-                reset();
-            }
-        }
-        k++;
-        printf("\n+");
-        for(j=0; j<col; j++)
-        {
-            printf("---+");
-        }
-        if(k>=triScreen&&k<(triScreen+7))
-        {
-            for(int x=0; x<farRight; x++)
-            {
-                printf(" ");
-            }
-            if(k==triScreen)
-            {
-                if(c%2==0)
-                {
-                    if(c==endGame)
-                    {
-                        printf("End Game!");
-                    }
-                    else
-                    {
-                        if(c%2==0)
-                        {
-                            red();
-                            printf("%s's Turn",player1.name);
-                            reset();
-                        }
-                        else
-                        {
-                            yellow();
-                            printf("%s's Turn",player2.name);
-                            reset();
-                        }
-                    }
-                }
-            }
-            else if(k==triScreen+1)
-            {
-                printf(" ");
-            }
-            else if(k==triScreen+2)
-            {
-                printf("Time: %02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
-            }
-            else if(k==triScreen+3)
-            {
-                printf(" ");
-            }
-            else if(k==triScreen+4)
-            {
-                printf("   Scores           %d Total moves",c);
-            }
-            else if(k==triScreen+5)
-            {
-                red();
-                printf("%-17s",player1.name);
-                printf(":%d     %d moves",player1.score,player1.nMoves);
-                reset();
-            }
-            else
-            {
-                yellow();
-                printf("%-17s",player2.name);
-                printf(":%d     %d moves",player2.score,player2.nMoves);
-                reset();
-            }
-        }
-        k++;
+    if(c==endGame){
+        printf("End Game!");
     }
+    else{
+        if(c%2==0)
+        {
+            red();
+            printf("%s's Turn",player1.name);
+            reset();
+        }
+        else
+        {
+            yellow();
+            printf("%s's Turn",player2.name);
+            reset();
+        }
+    }
+
+    gotoxy(space,9);
+    printf("Time: %02d:%02d:%02d",structTime.moveTimeHr,structTime.moveTimeMin,structTime.moveTimeSec);
+    gotoxy(space,11);
+    printf("   Scores            %d Total moves",c);
+    gotoxy(space,13);
+    red();
+    printf("%-17s",player1.name);
+    printf(":%d     %d moves",player1.score,player1.nMoves);
+    reset();
+    yellow();
+    gotoxy(space,14);
+    printf("%-17s",player2.name);
+    printf(":%d     %d moves",player2.score,player2.nMoves);
+    reset();
+    gotoxy(0,rows*2+3);
     printf("\n  ");
-
-    for(i=1; i<=col; i++) /// i is column counter viewer
+    for(int i=1; i<=col; i++) /// i is column counter viewer
     {
         printf("%02d  ",i);
     }
-    farRight +=21;
+    printf("\e[1;94m");
     printf("\n\nChoose from (1 to %d)",col);
 
-    printf("      'U' for Undo / 'R' for Redo / 'S' for Save / 'Q' for Quit");
-
+    printf("      'U' for Undo / 'R' for Redo / 'S' for Save / 'M' for Main Menu / 'Q' for Quit ");
+    reset();
     switch(errors)
     {
     case 0:
@@ -861,6 +785,9 @@ void printUI(int errors,char a[rows][col],info player1,info player2)
         printf("\nColumn is filled, choose another column\n");
         break;
     }
+
+
+
 }
 
 int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,info player2,int onePlayerCheck)
@@ -902,6 +829,11 @@ int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,i
                 Redo(a,piece,progress,player1,player2,onePlayerCheck);
                 fgets(character,1000,stdin);
                 j = atoi(character);
+            }
+            else if(character[0] == 'm'||character[0] == 'M')
+            {
+                system("cls");
+                mainMenu();
             }
             /*else if(character == 's'||character == 'S'){
                 saveCheck = 1;
@@ -1049,7 +981,7 @@ int start_new_game()
     {
         if(c%2==0)
         {
-            piece = X;
+            piece = 'X';
             fillBoard(a,piece,progress,player1,player2,onePlayerCheck);
             system("cls");
             structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
@@ -1060,7 +992,7 @@ int start_new_game()
         }
         else
         {
-            piece = O;
+            piece = 'O';
             fillBoard(a,piece,progress,player1,player2,onePlayerCheck);
             system("cls");
             structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
@@ -1072,6 +1004,7 @@ int start_new_game()
     }
 
     scores playerscore = count_4_Row(rows, col, a);
+    printf("\n");
     if(playerscore.score_x>playerscore.score_o)
     {
         red();
@@ -1203,7 +1136,7 @@ int load_game()  ///did not add struct
     {
         if(c%2==0)
         {
-            piece = X;
+            piece = 'X';
             fillBoard(a,piece,progress,player1,player2,onePlayerCheck);
             structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
             structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
@@ -1214,7 +1147,7 @@ int load_game()  ///did not add struct
         }
         else
         {
-            piece = O;
+            piece = 'O';
             fillBoard(a,piece,progress,player1,player2,onePlayerCheck);
             structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
             structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
@@ -1289,7 +1222,6 @@ parameters parametersInXml(char filename[256])
     int j;
     int count=0;
     int corruptionChecker=0; ///zero:normal - one:file is corrupted - two:file not found
-    int topScore;
     if (file != NULL)
     {
         while(count <=4)
@@ -1340,6 +1272,9 @@ parameters parametersInXml(char filename[256])
                 }
                 j++;
                 char height[256];
+                for(int x=0;x<10;x++){
+                    height[x] = 'a';
+                }
                 char heightOpenTag[] = "<Height>";
                 char heightCloseTag[] = "</Height>";
 
@@ -1390,6 +1325,9 @@ parameters parametersInXml(char filename[256])
                 }
                 j++;
                 char width[256];
+                for(int x=0;x<10;x++){
+                    width[x] = 'a';
+                }
                 char widthOpenTag[] = "<Width>";
                 char widthCloseTag[] = "</Width>";
 
@@ -1440,6 +1378,9 @@ parameters parametersInXml(char filename[256])
                 }
                 j++;
                 char highscore[256];
+                for(int x=0;x<10;x++){
+                    highscore[x] = 'a';
+                }
                 char highscoreOpenTag[] = "<Highscores>";
                 char highscoreCloseTag[] = "</Highscores>";
 
