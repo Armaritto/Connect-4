@@ -1,4 +1,4 @@
-// TODO LIST: Load game modification - Struct players use - save - Top players
+// TODO LIST: Load game modification - save - Top players - printUI modification
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -11,7 +11,6 @@
 /// Global Variables
 int rows;
 int col;
-int topScore;
 int c=0;
 int shift = 0;
 struct
@@ -34,6 +33,7 @@ typedef struct
     char name[256];
     int score;
     char color;
+    int nMoves;
 } info;
 
 typedef struct
@@ -49,7 +49,7 @@ parameters parametersInXml();
 void printUI(int errors,char a[rows][col],info player1,info player2);
 int start_new_game();
 int load_game();
-int top_players(char a[rows][col]);
+int top_players();
 int AI(char a[rows][col]);
 
 /// Secondary Functions
@@ -125,11 +125,11 @@ void Loading()
     printf(" ");
     red();
     for(int i=0;i<3;i++){
-        Sleep(500);
+      //  Sleep(500);
         printf(".");
     }
     reset();
-    Sleep(500);
+   // Sleep(500);
 }
 
 int Quit()
@@ -335,12 +335,12 @@ void mainMenu()
         system("cls");
         load_game();
         break;
-    /*case 3:
+    case 3:
         system("cls");
         Loading();
         system("cls");
         top_players();
-        break;*/
+        break;
     case 4:
         system("cls");
         Quit();
@@ -488,9 +488,7 @@ int error404()
 
 scores count_4_Row(int m, int n, char arr[m][n])
 {
-
     scores score;
-
     int score_R = 0, score_Y = 0;
     char temp;
     void check_right(int row, int col)
@@ -653,22 +651,25 @@ void printUI(int errors,char a[rows][col],info player1,info player2)
     int triScreen = rows/3; /// to print the menu in the 1st third of the board
     int farRight = (4*col)+1; /// to print the menu on the right
     char character1;
-    int moves_X=0;
-    int moves_O=0;
-
+    player1.color=X;
+    player2.color=O;
+    player1.nMoves=0;
+    player2.nMoves=0;
 
     if(c%2==0)
     {
-        moves_X = c/2;
-        moves_O = c/2;
+        player1.nMoves = c/2;
+        player2.nMoves = c/2;
     }
     else
     {
-        moves_X = (c/2)+1;
-        moves_O = c/2;
+        player1.nMoves = (c/2)+1;
+        player2.nMoves = c/2;
     }
 
     scores playerscore = count_4_Row(rows, col, a);
+    player1.score = playerscore.score_x;
+    player2.score = playerscore.score_o;
 
     for(int x=0; x<center; x++)
     {
@@ -756,14 +757,14 @@ void printUI(int errors,char a[rows][col],info player1,info player2)
             {
                 red();
                 printf("%-17s",player1.name);
-                printf(":%d     %d moves",playerscore.score_x,moves_X);
+                printf(":%d     %d moves",player1.score,player1.nMoves);
                 reset();
             }
             else
             {
                 yellow();
                 printf("%-17s",player2.name);
-                printf(":%d     %d moves",playerscore.score_o,moves_O);
+                printf(":%d     %d moves",player2.score,player2.nMoves);
                 reset();
             }
         }
@@ -824,14 +825,14 @@ void printUI(int errors,char a[rows][col],info player1,info player2)
             {
                 red();
                 printf("%-17s",player1.name);
-                printf(":%d     %d moves",playerscore.score_x,moves_X);
+                printf(":%d     %d moves",player1.score,player1.nMoves);
                 reset();
             }
             else
             {
                 yellow();
                 printf("%-17s",player2.name);
-                printf(":%d     %d moves",playerscore.score_o,moves_O);
+                printf(":%d     %d moves",player2.score,player2.nMoves);
                 reset();
             }
         }
@@ -976,7 +977,6 @@ int start_new_game()
     }
     rows = gameparameters.height;
     col = gameparameters.width;
-    topScore = gameparameters.highscores;
 
     char a[rows][col];
     int progress[rows*col];
@@ -1102,7 +1102,6 @@ int load_game()  ///did not add struct
     int onePlayerCheck;
     rows = 7;
     col = 9;
-    topScore = 10;
     char a[rows][col];
     int progress[rows*col];
     char piece;
@@ -1533,6 +1532,28 @@ parameters parametersInXml(char filename[256])
     }
 
     return parameters1;
+}
+
+int top_players(){
+    char gameFileParametersName[] = "Game Parameters.xml";
+    int defaultValueReference;
+    parameters gameparameters = parametersInXml(gameFileParametersName);
+    if(gameparameters.corrupted==1)
+    {
+        defaultValueReference = corruptedMenu();
+    }
+    else if(gameparameters.corrupted==2)
+    {
+        defaultValueReference = error404();
+    }
+    if(defaultValueReference == -1)
+    {
+        char defaultFileParametersName[] = "Default Parameters.xml";
+        gameparameters = parametersInXml(defaultFileParametersName);
+    }
+    printf("High Score is : %d",gameparameters.highscores);
+
+    return 0;
 }
 
 /// main
