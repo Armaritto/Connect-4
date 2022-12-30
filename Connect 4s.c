@@ -1032,12 +1032,14 @@ int start_new_game()
     gameparameters = parametersInXml(gameFileParametersName);
     while(gameparameters.corrupted==1 || gameparameters.corrupted==2)
     {
-        if(xmlDefaultCounter == 3){
+        if(xmlDefaultCounter == 3)
+        {
             char defaultFileParametersName[] = "Default Parameters.xml";
             gameparameters = parametersInXml(defaultFileParametersName);
             break;
         }
-        else{
+        else
+        {
             if(gameparameters.corrupted==1)
             {
                 defaultValueReference = corruptedMenu();
@@ -1266,7 +1268,7 @@ int start_new_game()
                 reset();
             }
 
-      }
+        }
         FILE *highscoresFile = fopen("HighScores.bin", "wb");
         fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
         fclose(highscoresFile);
