@@ -1,4 +1,4 @@
-// TODO LIST: Load game modification - save - Top players - 3 times failed xml
+// TODO LIST: Load game modification - save - 3 times failed xml - global struct variable Line 228
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -10,6 +10,7 @@ int rows;
 int col;
 int c=0;
 int shift = 0;
+int loaded;
 struct
 {
     int startTimeSec;
@@ -17,7 +18,6 @@ struct
     int moveTimeMin;
     int moveTimeHr;
 } structTime;
-
 
 /// Type Defined Structures
 typedef struct
@@ -42,13 +42,18 @@ typedef struct
     int corrupted;
 } parameters;
 
-/*
 typedef struct
 {
-    int storedScore;
-    char name[256];
-}highScoreStructs;
-*/
+    int rows;
+    int col;
+    info player1;
+    info player2;
+    int onePlayerCheck;
+    int c;
+    int shift;
+    int progress[1000];
+    int moveTime;
+} state;
 
 /// Prototypes
 parameters parametersInXml();
@@ -95,7 +100,7 @@ void openingGame()
     }
 
     char connect4s[] = "Connect 4s";
-    for(int i=0;i<strlen(connect4s);i++)
+    for(int i=0; i<strlen(connect4s); i++)
     {
         if(i%2==0)
         {
@@ -125,7 +130,7 @@ void Loading()
     }
 
     char Loading[] = "Loading";
-    for(int i=0;i<strlen(Loading);i++)
+    for(int i=0; i<strlen(Loading); i++)
     {
         if(i%2==0)
         {
@@ -140,12 +145,13 @@ void Loading()
     }
     printf(" ");
     red();
-    for(int i=0;i<3;i++){
-       // Sleep(500);
+    for(int i=0; i<3; i++)
+    {
+        Sleep(500);
         printf(".");
     }
     reset();
-    //Sleep(500);
+    Sleep(500);
 }
 
 int Quit()
@@ -159,7 +165,7 @@ int Quit()
     }
 
     char quitting[] = "Quitting";
-    for(int i=0;i<strlen(quitting);i++)
+    for(int i=0; i<strlen(quitting); i++)
     {
         if(i%2==0)
         {
@@ -174,7 +180,8 @@ int Quit()
     }
     printf(" ");
     red();
-    for(int i=0;i<3;i++){
+    for(int i=0; i<3; i++)
+    {
         Sleep(500);
         printf(".");
     }
@@ -202,14 +209,18 @@ struct highScoreStructs
     char name[256];
 };
 
-void sortByScore(struct highScoreStructs Ranked[],int n){
+void sortByScore(struct highScoreStructs Ranked[],int n)
+{
 
     int i,j;
     struct highScoreStructs temp;
 
-    for(i=0;i<n-1;i++){
-        for(j=i+1;j<n;j++){
-            if(Ranked[i].storedScore < Ranked[j].storedScore ){
+    for(i=0; i<n-1; i++)
+    {
+        for(j=i+1; j<n; j++)
+        {
+            if(Ranked[i].storedScore < Ranked[j].storedScore )
+            {
                 temp = Ranked[i];
                 Ranked[i] = Ranked[j];
                 Ranked[j] = temp;
@@ -221,6 +232,79 @@ void sortByScore(struct highScoreStructs Ranked[],int n){
 
 /// Main Functions
 struct highScoreStructs ranked[10];
+
+void save(int rows, int col, int progress[rows*col],info player1,info player2,int onePlayerCheck)
+{
+    state savedGames[3];
+    FILE *in;
+    in = fopen("savedGames.bin", "rb");
+    fread(&savedGames, sizeof(savedGames), 1, in);
+    fclose(in);
+    if (!loaded)
+    {
+        state temp;
+        temp = savedGames[2];
+        savedGames[2] = savedGames[1];
+        savedGames[1] = savedGames[0];
+        savedGames[0] = temp;
+
+    }
+
+
+    if (loaded == 0 || loaded == 1)
+    {
+
+        savedGames[0].rows= rows;
+        savedGames[0].col = col;
+        savedGames[0].player1 = player1;
+        savedGames[0].player2 = player2;
+        savedGames[0].onePlayerCheck = onePlayerCheck;
+        savedGames[0].c = c;
+        savedGames[0].shift = shift;
+        savedGames[0].moveTime = structTime.moveTimeSec;
+        for (int i = 0; i < c + shift; i++)
+        {
+            savedGames[0].progress[i] = progress[i];
+        }
+    }
+    else if(loaded == 2)
+    {
+        savedGames[1].rows= rows;
+        savedGames[1].col = col;
+        savedGames[1].player1 = player1;
+        savedGames[1].player2 = player2;
+        savedGames[1].onePlayerCheck = onePlayerCheck;
+        savedGames[1].c = c;
+        savedGames[1].shift = shift;
+        savedGames[1].moveTime = structTime.moveTimeSec;
+        for (int i = 0; i < c + shift; i++)
+        {
+            savedGames[1].progress[i] = progress[i];
+        }
+    }
+    else
+    {
+        savedGames[2].rows= rows;
+        savedGames[2].col = col;
+        savedGames[2].player1 = player1;
+        savedGames[2].player2 = player2;
+        savedGames[2].onePlayerCheck = onePlayerCheck;
+        savedGames[2].c = c;
+        savedGames[2].shift = shift;
+        savedGames[2].moveTime = structTime.moveTimeSec;
+        for (int i = 0; i < c + shift; i++)
+        {
+            savedGames[2].progress[i] = progress[i];
+        }
+    }
+
+
+    FILE *out;
+    out = fopen("savedGames.bin", "wb");
+    fwrite(&savedGames, sizeof(savedGames), 1, out);
+    fclose(out);
+
+}
 
 void Undo(char a[rows][col],char piece,int progress[rows*col],info player1,info player2,int onePlayerCheck)
 {
@@ -286,6 +370,7 @@ void Redo(char a[rows][col],char piece,int progress[rows*col],info player1,info 
 
 void mainMenu()
 {
+    loaded=0;
     int center=42;
     char the_menu[1000];
     for(int x=0; x<center; x++)
@@ -765,10 +850,12 @@ void printUI(int errors,char a[rows][col],info player1,info player2)
     reset();
     gotoxy(space,7);
 
-    if(c==endGame){
+    if(c==endGame)
+    {
         printf("End Game!");
     }
-    else{
+    else
+    {
         if(c%2==0)
         {
             red();
@@ -870,10 +957,13 @@ int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,i
                 system("cls");
                 mainMenu();
             }
-            /*else if(character == 's'||character == 'S'){
+            else if(character[0] == 's'||character[0] == 'S')
+            {
                 saveCheck = 1;
-                save();
-            }*/
+                save(rows,col,progress,player1,player2,onePlayerCheck);
+                fgets(character,1000,stdin);
+                j = atoi(character);
+            }
             else if(character[0] == 'q'||character[0] == 'Q')
             {
                 if(saveCheck==0)
@@ -894,7 +984,7 @@ int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,i
                     scanf("%d",&save_choice);
                     if(save_choice==1)
                     {
-                        //save();
+                        save(rows,col,progress,player1,player2,onePlayerCheck);
                     }
                 }
                 Quit();
@@ -939,7 +1029,8 @@ int start_new_game()
     int defaultValueReference;
     char gameFileParametersName[] = "Game Parameters.xml";
     gameparameters = parametersInXml(gameFileParametersName);
-    while(gameparameters.corrupted==1 || gameparameters.corrupted==2){
+    while(gameparameters.corrupted==1 || gameparameters.corrupted==2)
+    {
         if(gameparameters.corrupted==1)
         {
             defaultValueReference = corruptedMenu();
@@ -953,15 +1044,18 @@ int start_new_game()
             char defaultFileParametersName[] = "Default Parameters.xml";
             gameparameters = parametersInXml(defaultFileParametersName);
         }
-        else if(defaultValueReference == -5){
+        else if(defaultValueReference == -5)
+        {
             char gameFileParametersName2[256];
             system("cls");
             yellow();
             printf("Enter file's path\n");
             gets(gameFileParametersName2);
 
-            for(int i=0;i<strlen(gameFileParametersName2);i++){
-                if(gameFileParametersName2[i]=='\\'){
+            for(int i=0; i<strlen(gameFileParametersName2); i++)
+            {
+                if(gameFileParametersName2[i]=='\\')
+                {
                     gameFileParametersName2[i] = '/';
                 }
             }
@@ -1093,6 +1187,7 @@ int start_new_game()
         reset();
         strcpy(highstruct1.name,player2.name);
         highstruct1.storedScore = playerscore.score_o;
+
     }
     else
     {
@@ -1100,61 +1195,71 @@ int start_new_game()
         strcpy(highstruct1.name,player1.name);
         highstruct1.storedScore = playerscore.score_x;
     }
+   // if(!((playerscore.score_x<playerscore.score_o) || (onePlayerCheck==1)))
+   // {
+        FILE *highscoresFile2 = fopen("HighScores.bin", "rb");
+        fread(&TopRankedArrayofStructs, sizeof(TopRankedArrayofStructs), 1, highscoresFile2);
+        fclose(highscoresFile2);
 
-    FILE *highscoresFile2 = fopen("HighScores.bin", "rb");
-    fread(&TopRankedArrayofStructs, sizeof(TopRankedArrayofStructs), 1, highscoresFile2);
-    fclose(highscoresFile2);
+        sortByScore(TopRankedArrayofStructs,maxScores);
 
-    sortByScore(TopRankedArrayofStructs,maxScores);
-
-    /*if(TopRankedArrayofStructs[maxScores-1].storedScore < highstruct1.storedScore){
-        if(strcmp(tolower(TopRankedArrayofStructs[maxScores-1].name),tolower(highstruct1.name))=0){
-            TopRankedArrayofStructs[maxScores-1] = highstruct1;
-            sortByScore(TopRankedArrayofStructs,maxScores);
+        int found=0;
+        int i;
+        for(i=0; i<maxScores; i++)
+        {
+            if(strcasecmp(TopRankedArrayofStructs[i].name,highstruct1.name)==0)
+            {
+                found = 1;
+                break;
+            }
         }
+        if(found != 1)
+        {
+            if(TopRankedArrayofStructs[maxScores-1].storedScore < highstruct1.storedScore)
+            {
+                TopRankedArrayofStructs[maxScores-1] = highstruct1;
+                sortByScore(TopRankedArrayofStructs,maxScores);
+            }
+        }
+        else
+        {
+            if(TopRankedArrayofStructs[i].storedScore < highstruct1.storedScore)
+            {
+                TopRankedArrayofStructs[i] = highstruct1;
+                sortByScore(TopRankedArrayofStructs,maxScores);
+            }
+        }
+        for(i=0; i<maxScores; i++)
+        {
+            if(strcasecmp(TopRankedArrayofStructs[i].name,highstruct1.name)==0)
+            {
+                found = 1;
+                break;
+            }
+        }
+        if(i!=maxScores+1)
+        {
+            if(playerscore.score_x<playerscore.score_o)
+            {
+                yellow();
+                printf("\nYour Rank is %d\n",i+1);
+                reset();
+            }
+            else
+            {
+                red();
+                printf("\nYour Rank is %d\n",i+1);
+                reset();
+            }
+
+      //}
+        FILE *highscoresFile = fopen("HighScores.bin", "wb");
+        fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
+        fclose(highscoresFile);
+
     }
 
-*/
-    int found=0;
-    int i;
-    for(i=0;i<maxScores;i++){
-        if(strcmp(toupper(TopRankedArrayofStructs[i].name),toupper(highstruct1.name))==0){
-            found = 1;
-            break;
-        }
-    }
-    if(found != 1){
-        if(TopRankedArrayofStructs[maxScores-1].storedScore < highstruct1.storedScore){
-            TopRankedArrayofStructs[maxScores-1] = highstruct1;
-            sortByScore(TopRankedArrayofStructs,maxScores);
-        }
-    }
-    else{
-        if(TopRankedArrayofStructs[i].storedScore < highstruct1.storedScore){
-            TopRankedArrayofStructs[i] = highstruct1;
-            sortByScore(TopRankedArrayofStructs,maxScores);
-        }
-    }
-
-    ///rank is required
-    FILE *highscoresFile = fopen("HighScores.bin", "wb");
-    fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
-    fclose(highscoresFile);
-
-
-
-
-
-    /*FILE *highscoresFile = fopen("HighScores.bin", "rb");
-    highScoreStructs TopRanked[maxScores];
-    fread(&TopRanked, sizeof(TopRanked), 1, highFile);
-    struct highScoreStructs ranked[maxScores];
-    sortByScore(ranked,maxScores);
-    for(int i=0;i<maxScores;i++){
-        printf("%s %d",)
-    }*/
-
-    printf("Press Enter to return to main menu");
+    printf("\nPress Enter to return to main menu");
     getchar();
     system("cls");
     mainMenu();
@@ -1163,12 +1268,60 @@ int start_new_game()
 
 int load_game()
 {
+    parameters gameparameters;
+
+    int defaultValueReference;
+    char gameFileParametersName[] = "Game Parameters.xml";
+    gameparameters = parametersInXml(gameFileParametersName);
+    while(gameparameters.corrupted==1 || gameparameters.corrupted==2)
+    {
+        if(gameparameters.corrupted==1)
+        {
+            defaultValueReference = corruptedMenu();
+        }
+        else if(gameparameters.corrupted==2)
+        {
+            defaultValueReference = error404();
+        }
+        if(defaultValueReference == -1)
+        {
+            char defaultFileParametersName[] = "Default Parameters.xml";
+            gameparameters = parametersInXml(defaultFileParametersName);
+        }
+        else if(defaultValueReference == -5)
+        {
+            char gameFileParametersName2[256];
+            system("cls");
+            yellow();
+            printf("Enter file's path\n");
+            gets(gameFileParametersName2);
+
+            for(int i=0; i<strlen(gameFileParametersName2); i++)
+            {
+                if(gameFileParametersName2[i]=='\\')
+                {
+                    gameFileParametersName2[i] = '/';
+                }
+            }
+
+
+            strcpy(gameFileParametersName,gameFileParametersName2);
+        }
+        gameparameters = parametersInXml(gameFileParametersName);
+        system("cls");
+    }
+    int maxScores = gameparameters.highscores;
+
+    state savedGames[3];
+    state currentState;
+    FILE* in;
+    in = fopen("savedGames.bin", "rb");
+    fread(&savedGames, sizeof(savedGames), 1, in);
+    fclose(in);
+
     info player1;
     info player2;
     int onePlayerCheck;
-    rows = 6;
-    col = 7;
-    char a[rows][col];
     int progress[rows*col];
     char piece;
     int center=42;
@@ -1197,79 +1350,88 @@ int load_game()
     }
     yellow();
     printf("=================================\n");
-    scanf("%d",&currentGame);
-    Loading();
-    if(currentGame==2)
+    char input[256];
+    int j;
+    do
     {
-        c=29; ///read c and array
-        int b[6][7]=
-        {
-            {'O',' ',' ',' ',' ',' ',' '},
-            {'O',' ',' ',' ',' ',' ','X'},
-            {'O','X',' ','X',' ','X','X'},
-            {'O','X','X','X','X','X','X'},
-            {'O','O','O','O','O','X','X'},
-            {'O','X','O','X','X','X','X'}
-        };
-        for(int i=0; i<rows; i++)
-        {
-            for(int j=0; j<col; j++)
-            {
-                a[i][j]=b[i][j];
-            }
-        }
-    }
-    else if(currentGame==3)
-    {
-        c=29;
-        int b[6][7]=
-        {
-            {'X',' ',' ',' ',' ',' ',' '},
-            {'X',' ',' ',' ',' ',' ','X'},
-            {'X','X',' ','X',' ','X','X'},
-            {'X','X','X','X','X','X','X'},
-            {'X','O','O','O','O','X','X'},
-            {'X','X','O','X','X','X','X'}
-        };
-        for(int i=0; i<rows; i++)
-        {
-            for(int j=0; j<col; j++)
-            {
-                a[i][j]=b[i][j];
-            }
-        }
-    }
-    else
-    {
-        c=18;
-        int b[6][7]=
-        {
-            {' ',' ',' ',' ',' ',' ',' '},
-            {' ',' ',' ',' ',' ',' ',' '},
-            {' ','X',' ','X',' ','X',' '},
-            {' ','X','X','X','X','X',' '},
-            {' ','O','O','O','O','X',' '},
-            {' ','X','O','X','X','X',' '}
-        };
-        for(int i=0; i<rows; i++)
-        {
-            for(int j=0; j<col; j++)
-            {
-                a[i][j]=b[i][j];
-            }
-        }
-    }
+        fgets(input, 256, stdin);
+        j = atoi(input);
 
+        switch (j)
+        {
+        case 1:
+            currentState = savedGames[0];
+            break;
+        case 2:
+            currentState = savedGames[1];
+            break;
+        case 3:
+            currentState = savedGames[2];
+            break;
+        default:
+            j = 0;
+            printf("Enter a number from 1-3: ");
+        }
+    }
+    while(!j);
+    Loading();
+    loaded = j;
+    rows = currentState.rows;
+    col = currentState.col;
+    struct highScoreStructs highstruct1;
+    char a[rows][col];
+    for(int i=0; i<rows; i++)
+    {
+        for(int j=0; j<col; j++)
+        {
+            a[i][j]= ' ';
+        }
+    }
+    c = currentState.c;
+    shift = currentState.shift;
+    for(int i = 0; i < c + shift; i++)
+    {
+
+        progress[i] = currentState.progress[i];
+
+    }
+    player1 = currentState.player1;
+    player2 = currentState.player2;
+    onePlayerCheck = currentState.onePlayerCheck;
+    /// geting the pieces back
+    for (int k = 0; k < c
+            ; k++)
+    {
+        int j = progress[k];
+        for(int i=rows; i>=0; i--)
+        {
+            if(a[i][j] == ' ')
+            {
+                if(k%2 == 0)
+                {
+                    a[i][j] = 'X';
+                }
+                else
+                {
+                    a[i][j] = 'O';
+                }
+                break;
+            }
+        }
+    }
+    printUI(errors,a,player1,player2);
+    system("cls");
     printUI(errors,a,player1,player2);
     structTime.startTimeSec = time(NULL);
     int endGame=rows*col;
+
     while(c<endGame)
     {
         if(c%2==0)
         {
             piece = 'X';
             fillBoard(a,piece,progress,player1,player2,onePlayerCheck);
-            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
+            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec) + currentState.moveTime;
             structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
             structTime.moveTimeHr = (structTime.moveTimeMin/60);
             structTime.moveTimeSec %= 60;
@@ -1280,7 +1442,7 @@ int load_game()
         {
             piece = 'O';
             fillBoard(a,piece,progress,player1,player2,onePlayerCheck);
-            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec);
+            structTime.moveTimeSec = (time(NULL) - structTime.startTimeSec) + currentState.moveTime;
             structTime.moveTimeMin = (structTime.moveTimeSec/60)%60;
             structTime.moveTimeHr = (structTime.moveTimeMin/60);
             structTime.moveTimeSec %= 60;
@@ -1290,24 +1452,98 @@ int load_game()
     }
 
     scores playerscore = count_4_Row(rows, col, a);
+    struct highScoreStructs TopRankedArrayofStructs[maxScores];
     printf("\n");
+
+
     if(playerscore.score_x>playerscore.score_o)
     {
         red();
-        printf("%s is winner\n\n",player1.name);
+        printf("%s is winner",player1.name);
         reset();
+        strcpy(highstruct1.name,player1.name);
+        highstruct1.storedScore = playerscore.score_x;
     }
     else if(playerscore.score_x<playerscore.score_o)
     {
         yellow();
-        printf("%s is winner\n\n",player2.name);
+        printf("%s is winner",player2.name);
         reset();
+        strcpy(highstruct1.name,player2.name);
+        highstruct1.storedScore = playerscore.score_o;
+
     }
     else
     {
         printf("Draw\n\n");
+        strcpy(highstruct1.name,player1.name);
+        highstruct1.storedScore = playerscore.score_x;
     }
-    printf("Press Enter to return to main menu");
+    //if(!((playerscore.score_x<playerscore.score_o) || (onePlayerCheck==1)))
+    //{
+        FILE *highscoresFile2 = fopen("HighScores.bin", "rb");
+        fread(&TopRankedArrayofStructs, sizeof(TopRankedArrayofStructs), 1, highscoresFile2);
+        fclose(highscoresFile2);
+
+        sortByScore(TopRankedArrayofStructs,maxScores);
+
+        int found=0;
+        int i;
+        for(i=0; i<maxScores; i++)
+        {
+            if(strcasecmp(TopRankedArrayofStructs[i].name,highstruct1.name)==0)
+            {
+                found = 1;
+                break;
+            }
+        }
+        if(found != 1)
+        {
+            if(TopRankedArrayofStructs[maxScores-1].storedScore < highstruct1.storedScore)
+            {
+                TopRankedArrayofStructs[maxScores-1] = highstruct1;
+                sortByScore(TopRankedArrayofStructs,maxScores);
+            }
+        }
+        else
+        {
+            if(TopRankedArrayofStructs[i].storedScore < highstruct1.storedScore)
+            {
+                TopRankedArrayofStructs[i] = highstruct1;
+                sortByScore(TopRankedArrayofStructs,maxScores);
+            }
+        }
+        for(i=0; i<maxScores; i++)
+        {
+            if(strcasecmp(TopRankedArrayofStructs[i].name,highstruct1.name)==0)
+            {
+                found = 1;
+                break;
+            }
+        }
+        if(i!=maxScores+1)
+        {
+            if(playerscore.score_x<playerscore.score_o)
+            {
+                yellow();
+                printf("\nYour Rank is %d\n",i+1);
+                reset();
+            }
+            else
+            {
+                red();
+                printf("\nYour Rank is %d\n",i+1);
+                reset();
+            }
+
+        }
+        FILE *highscoresFile = fopen("HighScores.bin", "wb");
+        fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
+        fclose(highscoresFile);
+
+    //}
+
+    printf("\nPress Enter to return to main menu");
     getchar();
     system("cls");
     mainMenu();
@@ -1404,7 +1640,8 @@ parameters parametersInXml(char filename[256])
                 }
                 j++;
                 char height[256];
-                for(int x=0;x<10;x++){
+                for(int x=0; x<10; x++)
+                {
                     height[x] = 'a';
                 }
                 char heightOpenTag[] = "<Height>";
@@ -1457,7 +1694,8 @@ parameters parametersInXml(char filename[256])
                 }
                 j++;
                 char width[256];
-                for(int x=0;x<10;x++){
+                for(int x=0; x<10; x++)
+                {
                     width[x] = 'a';
                 }
                 char widthOpenTag[] = "<Width>";
@@ -1510,7 +1748,8 @@ parameters parametersInXml(char filename[256])
                 }
                 j++;
                 char highscore[256];
-                for(int x=0;x<10;x++){
+                for(int x=0; x<10; x++)
+                {
                     highscore[x] = 'a';
                 }
                 char highscoreOpenTag[] = "<Highscores>";
@@ -1603,7 +1842,7 @@ parameters parametersInXml(char filename[256])
         parameters1.highscores=0;
         parameters1.width=0;
     }
-
+    fclose(file);
     return parameters1;
 }
 
@@ -1615,7 +1854,8 @@ int top_players()
     int defaultValueReference;
     char gameFileParametersName[] = "Game Parameters.xml";
     gameparameters = parametersInXml(gameFileParametersName);
-    while(gameparameters.corrupted==1 || gameparameters.corrupted==2){
+    while(gameparameters.corrupted==1 || gameparameters.corrupted==2)
+    {
         if(gameparameters.corrupted==1)
         {
             defaultValueReference = corruptedMenu();
@@ -1629,15 +1869,18 @@ int top_players()
             char defaultFileParametersName[] = "Default Parameters.xml";
             gameparameters = parametersInXml(defaultFileParametersName);
         }
-        else if(defaultValueReference == -5){
+        else if(defaultValueReference == -5)
+        {
             char gameFileParametersName2[256];
             system("cls");
             yellow();
             printf("Enter file's path\n");
             gets(gameFileParametersName2);
 
-            for(int i=0;i<strlen(gameFileParametersName2);i++){
-                if(gameFileParametersName2[i]=='\\'){
+            for(int i=0; i<strlen(gameFileParametersName2); i++)
+            {
+                if(gameFileParametersName2[i]=='\\')
+                {
                     gameFileParametersName2[i] = '/';
                 }
             }
@@ -1664,7 +1907,8 @@ int top_players()
     gotoxy(center+4,0);
     printf("Top Players");
 
-    for(int i=0;i<maxScores;i++){
+    for(int i=0; i<maxScores; i++)
+    {
         gotoxy(center,i+2);
         yellow();
         printf("%s",TopRanked[i].name);
