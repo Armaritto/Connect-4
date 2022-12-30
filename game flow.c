@@ -4,7 +4,6 @@
 #include <windows.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
 
 /// Global Variables
 int rows;
@@ -41,6 +40,12 @@ typedef struct
     int highscores;
     int corrupted;
 } parameters;
+
+typedef struct
+{
+    int storedScore;
+    char name[256];
+}highScoreStructs;
 
 /// Prototypes
 parameters parametersInXml();
@@ -657,7 +662,8 @@ scores count_4_Row(int m, int n, char arr[m][n])
     return score;
 }
 
-void printBoard(char a[rows][col]){
+void printBoard(char a[rows][col])
+{
     char character;
     printf("\n\n");
     printf("\n+");
@@ -699,7 +705,8 @@ void printBoard(char a[rows][col]){
     }
 }
 
-void printUI(int errors,char a[rows][col],info player1,info player2){
+void printUI(int errors,char a[rows][col],info player1,info player2)
+{
 
     int endGame = rows*col;
     player1.color='X';
@@ -1509,26 +1516,56 @@ parameters parametersInXml(char filename[256])
 
 int top_players()
 {
-    char gameFileParametersName[] = "Game Parameters.xml";
+    int maxScores;
+    parameters gameparameters;
     int defaultValueReference;
-    parameters gameparameters = parametersInXml(gameFileParametersName);
-    if(gameparameters.corrupted==1)
-    {
-        defaultValueReference = corruptedMenu();
-    }
-    else if(gameparameters.corrupted==2)
-    {
-        defaultValueReference = error404();
-    }
-    if(defaultValueReference == -1)
-    {
-        char defaultFileParametersName[] = "Default Parameters.xml";
-        gameparameters = parametersInXml(defaultFileParametersName);
-    }
-    printf("High Score is : %d",gameparameters.highscores);
+    char gameFileParametersName[] = "Game Parameters.xml";
+    gameparameters = parametersInXml(gameFileParametersName);
+    while(gameparameters.corrupted==1 || gameparameters.corrupted==2){
+        if(gameparameters.corrupted==1)
+        {
+            defaultValueReference = corruptedMenu();
+        }
+        else if(gameparameters.corrupted==2)
+        {
+            defaultValueReference = error404();
+        }
+        if(defaultValueReference == -1)
+        {
+            char defaultFileParametersName[] = "Default Parameters.xml";
+            gameparameters = parametersInXml(defaultFileParametersName);
+        }
+        else if(defaultValueReference == -5){
+            char gameFileParametersName2[256];
+            system("cls");
+            yellow();
+            printf("Enter file's path\n");
+            gets(gameFileParametersName2);
 
-    return 0;
+            for(int i=0;i<strlen(gameFileParametersName2);i++){
+                if(gameFileParametersName2[i]=='\\'){
+                    gameFileParametersName2[i] = '/';
+                }
+            }
+
+
+            strcpy(gameFileParametersName,gameFileParametersName2);
+        }
+        gameparameters = parametersInXml(gameFileParametersName);
+        system("cls");
+    }
+
+    maxScores = gameparameters.highscores;
+
+
+    highScoreStructs TopRanked[10000];
+
+
 }
+
+
+
+
 
 /// main
 int main(void)
