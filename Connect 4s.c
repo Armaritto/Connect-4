@@ -1,4 +1,4 @@
-// TODO LIST: Load game modification - save - 3 times failed xml - global struct variable Line 228
+// TODO LIST: 3 times failed xml - global struct variable Line 228 - main menu bug
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -1195,8 +1195,12 @@ int start_new_game()
         strcpy(highstruct1.name,player1.name);
         highstruct1.storedScore = playerscore.score_x;
     }
-   // if(!((playerscore.score_x<playerscore.score_o) || (onePlayerCheck==1)))
-   // {
+    if((playerscore.score_x<playerscore.score_o) && (onePlayerCheck==1))
+    {
+        printf(" ");
+    }
+    else
+    {
         FILE *highscoresFile2 = fopen("HighScores.bin", "rb");
         fread(&TopRankedArrayofStructs, sizeof(TopRankedArrayofStructs), 1, highscoresFile2);
         fclose(highscoresFile2);
@@ -1252,7 +1256,7 @@ int start_new_game()
                 reset();
             }
 
-      //}
+      }
         FILE *highscoresFile = fopen("HighScores.bin", "wb");
         fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
         fclose(highscoresFile);
@@ -1269,7 +1273,6 @@ int start_new_game()
 int load_game()
 {
     parameters gameparameters;
-
     int defaultValueReference;
     char gameFileParametersName[] = "Game Parameters.xml";
     gameparameters = parametersInXml(gameFileParametersName);
@@ -1307,7 +1310,7 @@ int load_game()
 
             strcpy(gameFileParametersName,gameFileParametersName2);
         }
-        gameparameters = parametersInXml(gameFileParametersName);
+
         system("cls");
     }
     int maxScores = gameparameters.highscores;
@@ -1479,8 +1482,12 @@ int load_game()
         strcpy(highstruct1.name,player1.name);
         highstruct1.storedScore = playerscore.score_x;
     }
-    //if(!((playerscore.score_x<playerscore.score_o) || (onePlayerCheck==1)))
-    //{
+    if((playerscore.score_x<playerscore.score_o) && (onePlayerCheck==1))
+    {
+        printf(" ");
+    }
+    else
+    {
         FILE *highscoresFile2 = fopen("HighScores.bin", "rb");
         fread(&TopRankedArrayofStructs, sizeof(TopRankedArrayofStructs), 1, highscoresFile2);
         fclose(highscoresFile2);
@@ -1541,7 +1548,7 @@ int load_game()
         fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
         fclose(highscoresFile);
 
-    //}
+    }
 
     printf("\nPress Enter to return to main menu");
     getchar();
