@@ -1,4 +1,3 @@
-// TODO LIST: 3 times failed xml - global struct variable Line 228 - main menu bug
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -231,7 +230,6 @@ void sortByScore(struct highScoreStructs Ranked[],int n)
 }
 
 /// Main Functions
-struct highScoreStructs ranked[10];
 
 void save(int rows, int col, int progress[rows*col],info player1,info player2,int onePlayerCheck)
 {
@@ -421,7 +419,7 @@ void mainMenu()
     }
     printf("|");
     red();
-    printf("3.Top Player                   ");
+    printf("3.Top Players                  ");
     yellow();
     printf("|\n");
     for(int x=0; x<center-1; x++)
@@ -576,6 +574,7 @@ int corruptedMenu()
         system("cls");
         return -5;
     }
+    return 0;
 }
 
 int error404()
@@ -615,6 +614,7 @@ int error404()
         system("cls");
         return -5;
     }
+    return 0;
 }
 
 scores count_4_Row(int m, int n, char arr[m][n])
@@ -1023,6 +1023,7 @@ int fillBoard(char a[rows][col],char piece,int progress[rows*col],info player1,i
 
 int start_new_game()
 {
+    int xmlDefaultCounter = 0;
     parameters gameparameters;
     info player1;
     info player2;
@@ -1031,40 +1032,49 @@ int start_new_game()
     gameparameters = parametersInXml(gameFileParametersName);
     while(gameparameters.corrupted==1 || gameparameters.corrupted==2)
     {
-        if(gameparameters.corrupted==1)
-        {
-            defaultValueReference = corruptedMenu();
-        }
-        else if(gameparameters.corrupted==2)
-        {
-            defaultValueReference = error404();
-        }
-        if(defaultValueReference == -1)
-        {
+        if(xmlDefaultCounter == 3){
             char defaultFileParametersName[] = "Default Parameters.xml";
             gameparameters = parametersInXml(defaultFileParametersName);
+            break;
         }
-        else if(defaultValueReference == -5)
-        {
-            char gameFileParametersName2[256];
-            system("cls");
-            yellow();
-            printf("Enter file's path\n");
-            gets(gameFileParametersName2);
-
-            for(int i=0; i<strlen(gameFileParametersName2); i++)
+        else{
+            if(gameparameters.corrupted==1)
             {
-                if(gameFileParametersName2[i]=='\\')
-                {
-                    gameFileParametersName2[i] = '/';
-                }
+                defaultValueReference = corruptedMenu();
+            }
+            else if(gameparameters.corrupted==2)
+            {
+                defaultValueReference = error404();
             }
 
+            if(defaultValueReference == -1)
+            {
+                char defaultFileParametersName[] = "Default Parameters.xml";
+                gameparameters = parametersInXml(defaultFileParametersName);
+            }
+            else if(defaultValueReference == -5)
+            {
+                char gameFileParametersName2[256];
+                system("cls");
+                yellow();
+                printf("Enter file's path\n");
+                gets(gameFileParametersName2);
 
-            strcpy(gameFileParametersName,gameFileParametersName2);
+                for(int i=0; i<strlen(gameFileParametersName2); i++)
+                {
+                    if(gameFileParametersName2[i]=='\\')
+                    {
+                        gameFileParametersName2[i] = '/';
+                    }
+                }
+
+
+                strcpy(gameFileParametersName,gameFileParametersName2);
+            }
+            gameparameters = parametersInXml(gameFileParametersName);
+            system("cls");
+            xmlDefaultCounter +=1;
         }
-        gameparameters = parametersInXml(gameFileParametersName);
-        system("cls");
     }
 
 
@@ -1928,6 +1938,7 @@ int top_players()
     getchar();
     system("cls");
     mainMenu();
+    return 0;
 }
 /// main
 int main(void)
