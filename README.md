@@ -1,7 +1,7 @@
 # Connect-4
 Project_Programming-1
 
-TODO LIST: load game modification - save - Top players
+3 times failed xml - global struct variable Line 228 - main menu bug
 
 REPORT
 
