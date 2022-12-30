@@ -1,4 +1,4 @@
-// TODO LIST: Load game modification - save - Top players
+// TODO LIST: Load game modification - save - Top players - 3 times failed xml
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -17,6 +17,7 @@ struct
     int moveTimeMin;
     int moveTimeHr;
 } structTime;
+
 
 /// Type Defined Structures
 typedef struct
@@ -41,11 +42,13 @@ typedef struct
     int corrupted;
 } parameters;
 
+/*
 typedef struct
 {
     int storedScore;
     char name[256];
 }highScoreStructs;
+*/
 
 /// Prototypes
 parameters parametersInXml();
@@ -138,11 +141,11 @@ void Loading()
     printf(" ");
     red();
     for(int i=0;i<3;i++){
-        Sleep(500);
+       // Sleep(500);
         printf(".");
     }
     reset();
-    Sleep(500);
+    //Sleep(500);
 }
 
 int Quit()
@@ -193,7 +196,31 @@ char update_piece(char piece)
     return piece;
 }
 
+struct highScoreStructs
+{
+    int storedScore;
+    char name[256];
+};
+
+void sortByScore(struct highScoreStructs Ranked[],int n){
+
+    int i,j;
+    struct highScoreStructs temp;
+
+    for(i=0;i<n-1;i++){
+        for(j=i+1;j<n;j++){
+            if(Ranked[i].storedScore < Ranked[j].storedScore ){
+                temp = Ranked[i];
+                Ranked[i] = Ranked[j];
+                Ranked[j] = temp;
+            }
+        }
+    }
+
+}
+
 /// Main Functions
+struct highScoreStructs ranked[10];
 
 void Undo(char a[rows][col],char piece,int progress[rows*col],info player1,info player2,int onePlayerCheck)
 {
@@ -947,8 +974,11 @@ int start_new_game()
     }
 
 
+    struct highScoreStructs highstruct1;
+
     rows = gameparameters.height;
     col = gameparameters.width;
+    int maxScores = gameparameters.highscores;
 
     char a[rows][col];
     int progress[rows*col];
@@ -1044,23 +1074,86 @@ int start_new_game()
     }
 
     scores playerscore = count_4_Row(rows, col, a);
+    struct highScoreStructs TopRankedArrayofStructs[maxScores];
     printf("\n");
+
+
     if(playerscore.score_x>playerscore.score_o)
     {
         red();
-        printf("%s is winner\n\n",player1.name);
+        printf("%s is winner",player1.name);
         reset();
+        strcpy(highstruct1.name,player1.name);
+        highstruct1.storedScore = playerscore.score_x;
     }
     else if(playerscore.score_x<playerscore.score_o)
     {
         yellow();
-        printf("%s is winner\n\n",player2.name);
+        printf("%s is winner",player2.name);
         reset();
+        strcpy(highstruct1.name,player2.name);
+        highstruct1.storedScore = playerscore.score_o;
     }
     else
     {
         printf("Draw\n\n");
+        strcpy(highstruct1.name,player1.name);
+        highstruct1.storedScore = playerscore.score_x;
     }
+
+    FILE *highscoresFile2 = fopen("HighScores.bin", "rb");
+    fread(&TopRankedArrayofStructs, sizeof(TopRankedArrayofStructs), 1, highscoresFile2);
+    fclose(highscoresFile2);
+
+    sortByScore(TopRankedArrayofStructs,maxScores);
+
+    /*if(TopRankedArrayofStructs[maxScores-1].storedScore < highstruct1.storedScore){
+        if(strcmp(tolower(TopRankedArrayofStructs[maxScores-1].name),tolower(highstruct1.name))=0){
+            TopRankedArrayofStructs[maxScores-1] = highstruct1;
+            sortByScore(TopRankedArrayofStructs,maxScores);
+        }
+    }
+
+*/
+    int found=0;
+    int i;
+    for(i=0;i<maxScores;i++){
+        if(strcmp(toupper(TopRankedArrayofStructs[i].name),toupper(highstruct1.name))==0){
+            found = 1;
+            break;
+        }
+    }
+    if(found != 1){
+        if(TopRankedArrayofStructs[maxScores-1].storedScore < highstruct1.storedScore){
+            TopRankedArrayofStructs[maxScores-1] = highstruct1;
+            sortByScore(TopRankedArrayofStructs,maxScores);
+        }
+    }
+    else{
+        if(TopRankedArrayofStructs[i].storedScore < highstruct1.storedScore){
+            TopRankedArrayofStructs[i] = highstruct1;
+            sortByScore(TopRankedArrayofStructs,maxScores);
+        }
+    }
+
+    ///rank is required
+    FILE *highscoresFile = fopen("HighScores.bin", "wb");
+    fwrite(&TopRankedArrayofStructs,sizeof(TopRankedArrayofStructs),1,highscoresFile);
+    fclose(highscoresFile);
+
+
+
+
+
+    /*FILE *highscoresFile = fopen("HighScores.bin", "rb");
+    highScoreStructs TopRanked[maxScores];
+    fread(&TopRanked, sizeof(TopRanked), 1, highFile);
+    struct highScoreStructs ranked[maxScores];
+    sortByScore(ranked,maxScores);
+    for(int i=0;i<maxScores;i++){
+        printf("%s %d",)
+    }*/
+
     printf("Press Enter to return to main menu");
     getchar();
     system("cls");
@@ -1516,6 +1609,7 @@ parameters parametersInXml(char filename[256])
 
 int top_players()
 {
+    int center = ((col*4)+50)/2;
     int maxScores;
     parameters gameparameters;
     int defaultValueReference;
@@ -1557,19 +1651,37 @@ int top_players()
 
     maxScores = gameparameters.highscores;
 
+    struct highScoreStructs TopRanked[maxScores];
 
-    highScoreStructs TopRanked[10000];
+    FILE* highFile = fopen("HighScores.bin", "rb");
+
+    fread(&TopRanked, sizeof(TopRanked), 1, highFile);
+    fclose(highFile);
+
+    sortByScore(TopRanked,maxScores);
+
+    printf("\e[1;94m");
+    gotoxy(center+4,0);
+    printf("Top Players");
+
+    for(int i=0;i<maxScores;i++){
+        gotoxy(center,i+2);
+        yellow();
+        printf("%s",TopRanked[i].name);
+        red();
+        gotoxy(center+17,i+2);
+        printf("%d",TopRanked[i].storedScore);
+    }
 
 
+    getchar();
+    system("cls");
+    mainMenu();
 }
-
-
-
-
-
 /// main
 int main(void)
 {
+
     openingGame();
     system("cls");
     mainMenu();
